@@ -4,7 +4,7 @@
   "description": "MailGuard AI — Gmail Spam & Phishing Investigation System",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "workspaces": [
     "client",
