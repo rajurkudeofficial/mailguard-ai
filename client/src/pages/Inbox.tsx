@@ -26,13 +26,6 @@ interface GmailMessagesResponse {
     total: number;
 }
 
-interface AnalysisResult {
-    classification: string;
-    riskLevel: string;
-    securityScore: number;
-    recommendation?: string;
-}
-
 export const Inbox: React.FC = () => {
     const queryClient = useQueryClient();
 
