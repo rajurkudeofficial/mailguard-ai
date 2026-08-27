@@ -1,0 +1,13 @@
+.env
+.env.*
+google_auth.json
+
+node_modules/
+dist/
+*.db
+*.db-journal
+
+client/dist/
+server/dist/
+
+.vscode/

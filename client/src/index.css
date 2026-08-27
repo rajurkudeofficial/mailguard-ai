@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-navy-950 text-slate-300 font-sans antialiased min-h-screen selection:bg-cyber selection:text-navy-950;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-100 font-medium tracking-tight;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-navy-900/60 backdrop-blur-md border border-navy-700/50 rounded-xl shadow-glass;
+  }
+  
+  .btn-primary {
+    @apply px-4 py-2 bg-purple text-white rounded-lg font-medium transition-all hover:bg-purple-dim hover:shadow-purple focus:ring-2 focus:ring-purple/50 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-navy-800 text-slate-200 border border-navy-700 rounded-lg font-medium transition-all hover:bg-navy-700 focus:ring-2 focus:ring-navy-600 active:scale-95;
+  }
+}

@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USER — Google OAuth identity
+// ============================================================
+model User {
+  id                String   @id @default(cuid())
+  googleId          String   @unique
+  email             String   @unique
+  name              String
+  avatarUrl         String?
+  // AES-256-GCM encrypted OAuth tokens
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  tokenExpiresAt    DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  emails         Email[]
+  trustedSenders TrustedSender[]
+  auditLogs      AuditLog[]
+  securityAlerts SecurityAlert[]
+
+  @@map("users")
+}
+
+// ============================================================
+// EMAIL — Analyzed Gmail message
+// ============================================================
+model Email {
+  id              String   @id @default(cuid())
+  userId          String
+  gmailMessageId  String   @unique
+  threadId        String?
+  sender          String
+  senderDomain    String
+  senderName      String?
+  replyTo         String?
+  returnPath      String?
+  subject         String
+  snippet         String?
+  receivedAt      DateTime
+  analyzedAt      DateTime @default(now())
+
+  // Classification results
+  classification  String   @default("UNKNOWN")
+  riskLevel       String   @default("LOW")
+  securityScore   Int      @default(50)
+  recommendation  String?
+
+  // Flags
+  isDemo          Boolean  @default(false)
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysis EmailAnalysis?
+
+  @@index([userId])
+  @@index([classification])
+  @@index([riskLevel])
+  @@index([receivedAt])
+  @@map("emails")
+}
+
+// ============================================================
+// EMAIL ANALYSIS — Detailed investigation results
+// ============================================================
+model EmailAnalysis {
+  id      String @id @default(cuid())
+  emailId String @unique
+
+  // Header authentication
+  spfResult   String?  // PASS | FAIL | SOFTFAIL | NEUTRAL | NONE
+  dkimResult  String?  // PASS | FAIL | NONE
+  dmarcResult String?  // PASS | FAIL | NONE
+
+  // Sender signals
+  suspiciousSender    Boolean @default(false)
+  displayNameMismatch Boolean @default(false)
+  replyToMismatch     Boolean @default(false)
+  lookAlikeDomain     Boolean @default(false)
+  typosquatting       Boolean @default(false)
+
+  // URL signals
+  hasUrls          Boolean @default(false)
+  urlCount         Int     @default(0)
+  suspiciousUrls   Boolean @default(false)
+  maliciousUrls    Boolean @default(false)
+  httpUrls         Boolean @default(false)
+  urlShorteners    Boolean @default(false)
+  urlData          String? // JSON array of URL objects
+
+  // Content signals
+  urgencyLanguage      Boolean @default(false)
+  threatLanguage       Boolean @default(false)
+  credentialRequest    Boolean @default(false)
+  financialRequest     Boolean @default(false)
+  otpRequest           Boolean @default(false)
+  fakeInvoice          Boolean @default(false)
+  prizeScam            Boolean @default(false)
+  impersonation        Boolean @default(false)
+  contentKeywords      String? // JSON array of matched keywords
+
+  // Attachment signals
+  hasAttachments       Boolean @default(false)
+  attachmentCount      Int     @default(0)
+  suspiciousAttachment Boolean @default(false)
+  executableAttachment Boolean @default(false)
+  attachmentData       String? // JSON array of attachment objects
+
+  // Score breakdown
+  scoreBreakdown String? // JSON array of {label, points} contributing factors
+
+  // Evidence and recommendation
+  evidence       String? // JSON array of evidence objects
+  recommendation String?
+  aiExplanation  String? // Optional LLM narrative
+
+  email Email @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@map("email_analyses")
+}
+
+// ============================================================
+// TRUSTED SENDER — User-managed allowlist
+// ============================================================
+model TrustedSender {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // EMAIL | DOMAIN
+  value     String   // the email address or domain
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, value])
+  @@map("trusted_senders")
+}
+
+// ============================================================
+// SECURITY ALERT — Detected security-related emails
+// ============================================================
+model SecurityAlert {
+  id             String   @id @default(cuid())
+  userId         String
+  emailId        String?
+  alertType      String   // NEW_LOGIN | PASSWORD_CHANGE | SUSPICIOUS_LOGIN | etc.
+  isLegitimate   Boolean? // null = unknown, true = legit, false = fake/suspicious
+  description    String?
+  detectedAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("security_alerts")
+}
+
+// ============================================================
+// AUDIT LOG — Action trail
+// ============================================================
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String?
+  ipAddress String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
