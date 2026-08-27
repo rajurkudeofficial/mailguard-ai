@@ -50,8 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = () => {
-    // Redirect to backend OAuth route
-    window.location.href = 'http://localhost:3001/api/auth/google';
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
 
   const logout = async () => {
