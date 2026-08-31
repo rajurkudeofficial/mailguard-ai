@@ -66,6 +66,7 @@ app.use('/api/', apiLimiter);
 app.use('/api/auth/', authLimiter);
 
 // ── Session ───────────────────────────────────────────────────────────────
+app.set('trust proxy', 1);
 app.use(
   session({
     secret: config.sessionSecret,
@@ -74,8 +75,8 @@ app.use(
     cookie: {
       secure: !config.isDevelopment,
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      sameSite: config.isDevelopment ? 'lax' : 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: config.isDevelopment ? 'lax' : 'none',
     },
     name: 'mg_sid',
   })
